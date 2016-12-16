@@ -55,6 +55,7 @@
  *    Untappd
  *    Xing
  *    Trakt.tv
+ *    PayPal OpenID
  */
 
 angular.module("ngCordovaOauth", [
