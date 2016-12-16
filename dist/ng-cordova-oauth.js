@@ -1092,7 +1092,7 @@
       netatmo: $ngCordovaNetatmo.signin,
       trakttv: $ngCordovaTraktTv.signin,
       yahoo: $ngCordovaYahoo.signin,
-      paypal: $ngCordovaPayPalOpenID
+      paypal: $ngCordovaPayPalOpenID.signin
     };
   }
 
@@ -1639,11 +1639,11 @@
             }
           }
 
-          var endpoint = "";
+          var link = "";
           if (options.mode === "sandbox") {
-            endpoint = 'https://www.sandbox.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=';
+            link = 'https://www.sandbox.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=';
           } else {
-            endpoint = 'https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=';
+            link = 'https://www.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=';
           }
 
           // https://www.sandbox.paypal.com/webapps/auth/protocol/openidconnect/v1/authorize?client_id=AQkquBDf1zctJOWGKWUEtKXm6qVhueUEMvXO_-MCI4DQQ4-LWvkDLIN2fGsd&
@@ -1654,24 +1654,21 @@
           var browserRef = window.cordova.InAppBrowser.open(link + clientId + '&redirect_uri=' + redirect_uri + '&scope=' + appScope.join(" ") + '&response_type=code&state=' + state, '_blank', 'location=no,clearsessioncache=yes,clearcache=yes');
           browserRef.addEventListener('loadstart', function(event) {
             if ((event.url).indexOf(redirect_uri) === 0) {
-              try {
-                var requestToken = (event.url).split("code=")[1].split("&")[0];
-                $http({ method: "post", headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, url: "https://www.PayPalOpenID.com/uas/oauth2/accessToken", data: "client_id=" + clientId + "&client_secret=" + clientSecret + "&redirect_uri=" + redirect_uri + "&grant_type=authorization_code" + "&code=" + requestToken })
-                  .success(function(data) {
-                    deferred.resolve(data);
-                  })
-                  .error(function(data, status) {
-                    deferred.reject("Problem authenticating");
-                  })
-                  .finally(function() {
-                    setTimeout(function() {
-                      browserRef.close();
-                    }, 10);
-                  });
-              } catch (e) {
-                setTimeout(function() {
-                  browserRef.close();
-                }, 10);
+              browserRef.removeEventListener("exit", function(event) {});
+              browserRef.close();
+              var splitChar = (response_type === "code") ? "?" : "#";
+              var callbackResponse = (event.url).split(splitChar)[1];
+              var responseParameters = (callbackResponse).split("&");
+              var parameterMap = [];
+              for (var i = 0; i < responseParameters.length; i++) {
+                parameterMap[responseParameters[i].split("=")[0]] = responseParameters[i].split("=")[1];
+              }
+              if (response_type === "token" && parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
+                deferred.resolve({ access_token: parameterMap.access_token, expires_in: parameterMap.expires_in, account_username: parameterMap.account_username });
+              } else if (response_type === "code" && parameterMap.code !== undefined && parameterMap.code !== null) {
+                deferred.resolve({ code: parameterMap.code, state: parameterMap.state });
+              } else {
+                deferred.reject("Problem authenticating");
               }
             }
           });

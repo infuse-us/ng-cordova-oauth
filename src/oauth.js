@@ -98,7 +98,7 @@
       netatmo: $ngCordovaNetatmo.signin,
       trakttv: $ngCordovaTraktTv.signin,
       yahoo: $ngCordovaYahoo.signin,
-      paypal: $ngCordovaPayPalOpenID
+      paypal: $ngCordovaPayPalOpenID.signin
     };
   }
 
