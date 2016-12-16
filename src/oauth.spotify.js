@@ -61,7 +61,7 @@
             deferred.reject("The sign in flow was canceled");
           });
         } else {
-            deferred.reject("Could not find InAppBrowser plugin");
+          deferred.reject("Could not find InAppBrowser plugin");
         }
       } else {
         deferred.reject("Cannot authenticate via a web browser");

@@ -45,16 +45,14 @@
             if ((event.url).indexOf(redirect_uri) === 0) {
               browserRef.removeEventListener("exit", function(event) {});
               browserRef.close();
-              var splitChar = (response_type === "code") ? "?" : "#";
+              var splitChar = "?";
               var callbackResponse = (event.url).split(splitChar)[1];
               var responseParameters = (callbackResponse).split("&");
               var parameterMap = [];
               for (var i = 0; i < responseParameters.length; i++) {
                 parameterMap[responseParameters[i].split("=")[0]] = responseParameters[i].split("=")[1];
               }
-              if (response_type === "token" && parameterMap.access_token !== undefined && parameterMap.access_token !== null) {
-                deferred.resolve({ access_token: parameterMap.access_token, expires_in: parameterMap.expires_in, account_username: parameterMap.account_username });
-              } else if (response_type === "code" && parameterMap.code !== undefined && parameterMap.code !== null) {
+              if (parameterMap.code !== undefined && parameterMap.code !== null) {
                 deferred.resolve({ code: parameterMap.code, state: parameterMap.state });
               } else {
                 deferred.reject("Problem authenticating");
